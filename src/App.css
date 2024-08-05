@@ -1,0 +1,259 @@
+/* General Styles */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #ffffff; /* White background */
+  color: #000000;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  position: relative; /* Make container relative for positioning child elements */
+}
+
+.logo,
+.logo-lexmeet {
+  height: 8em;
+  padding: 1.5em;
+  transition: filter 300ms;
+}
+
+.logo:hover,
+.logo-lexmeet:hover {
+  filter: drop-shadow(0 0 2em hsla(0, 0%, 8%, 0.667)); /* Subtle shadow effect */
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+}
+
+header h1 {
+  margin: 0;
+  display: inline-block;
+  font-size: 2.5rem; /* Adjust size as needed */
+  animation: wiggleWiggle 1s infinite alternate;
+}
+
+@keyframes wiggleWiggle {
+  20%, 100% {
+    transform: translateY(3px);
+  }
+  0% {
+    transform: translateY(0px);
+  }
+  10% {
+    transform: translateY(3px);
+  }
+}
+
+/* Search styling */
+.search-container {
+  position: absolute;
+  top: 1rem; /* Distance from top */
+  right: 1rem; /* Distance from right */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-container input {
+  padding: 0.5em;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1px solid #666;
+  color: #000;
+  width: 200px; /* Adjust width as needed */
+}
+
+/* Task input and search styling */
+.task-input {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.task-input input[type="text"] {
+  padding: 0.5em;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1px solid #666;
+  color: #000;
+}
+
+.task-input button.comic-button {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  background-color: #9D71BC;
+  border: 2px solid #000;
+  border-radius: 10px;
+  box-shadow: 5px 5px 0px #000;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.task-input button.comic-button:hover {
+  background-color: #FF7F4D;
+  color: #fff;
+  border: 2px solid #ff5252;
+}
+
+.task-input button.comic-button:active {
+  background-color: #fcf414;
+  box-shadow: none;
+  transform: translateY(4px);
+}
+
+/* Task list and item styling */
+.task-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+
+.task-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1em;
+  background: linear-gradient(to right, #F4512C, #5E1B89); /* Gradient background */
+  color: #ffffff; /* White text for task items */
+  border-radius: 18px;
+  transition: transform 0.3s ease; /* Transition for hover effect */
+  position: relative;
+  width: calc(33.333% - 1em); /* Three items per row with space for gaps */
+  box-sizing: border-box;
+  overflow: hidden; /* Hide overflow content */
+}
+
+.task-item:hover {
+  transform: translateY(-5px); /* Move task up on hover */
+}
+
+.task-item.done .task-content span {
+  text-decoration: line-through;
+  color: #aaa;
+}
+
+.task-content {
+  margin-bottom: 1em;
+  overflow: hidden; /* Hide overflow text */
+  text-overflow: ellipsis; /* Show ellipsis when text overflows */
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Task buttons styling */
+.task-buttons {
+  display: flex;
+  gap: 0.5em;
+}
+
+.task-buttons button {
+  background-color: #ffffff; /* White background for buttons */
+  color: #000000; /* Black text for contrast */
+  border: 2px solid #000; /* Black border */
+  border-radius: 20px;
+  padding: 5px 10px;
+  font-size: 0.8em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: none; /* Remove box shadow */
+}
+
+.task-buttons button:hover {
+  background-color: #FF7F4D; /* Light color on hover */
+  color: #fff;
+  border: 2px solid #ff5252;
+}
+
+.task-buttons button:active {
+  background-color: #fcf414;
+  transform: translateY(2px);
+}
+
+/* Modal styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: linear-gradient(to right, #F4512C, #5E1B89); /* Gradient background */
+  padding: 2em;
+  border-radius: 10px;
+  color: #ffffff;
+  text-align: center;
+  max-width: 90vw; /* Ensure modal does not exceed viewport width */
+  max-height: 90vh; /* Ensure modal does not exceed viewport height */
+  overflow: hidden; /* Hide overflow content */
+  box-sizing: border-box; /* Include padding in width and height */
+  position: relative; /* Ensure positioning context for child elements */
+}
+
+.modal h2 {
+  margin-top: 0;
+}
+
+.modal p {
+  margin: 1em 0;
+  word-wrap: break-word; /* Break long words to fit inside */
+  white-space: pre-wrap; /* Preserve white spaces and line breaks */
+  overflow: hidden; /* Hide overflow content */
+  text-overflow: ellipsis; /* Show ellipsis if needed */
+}
+
+/* New styles for date of creation */
+.date-created {
+  font-size: 0.75em;
+  color: #ddd;
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+}
+
+.modal button {
+  margin-top: 1em;
+}
+
+/* Task date creation style */
+.task-date-created {
+  font-size: 0.75em;
+  color: #ddd;
+  text-align: right;
+  margin-top: 1em;
+}
+
+/* Lexmeet Logo Styling */
+.logo-lexmeet {
+  height: 4em; /* Adjust size as needed to ensure it is small */
+  position: absolute;
+  top: 1rem; /* Distance from top */
+  left: 1rem; /* Distance from left */
+  transition: filter 300ms; /* Smooth transition for filter */
+}
+
+.logo-lexmeet:hover {
+  filter: drop-shadow(0 0 2em hsla(0, 0%, 8%, 0.667)); /* Subtle shadow effect */
+}
