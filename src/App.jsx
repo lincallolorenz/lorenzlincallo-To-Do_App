@@ -1,201 +1,336 @@
 import { useState, useEffect, useRef } from 'react';
 import newLogo from './assets/To-Do_app_Logo.png'; // Import the new logo
-import lexmeetLogo from './assets/Lexmeet-logo.png'; // Import the Lexmeet logo
-import './App.css';
+import lexmeetLogo from './assets/LexMeet_logo.png'; // Import the Lexmeet logo
+import './App.css'; // Import the CSS file
 import clickSound from './assets/mouse-click-153941.mp3'; // Import click sound
 
 function App() {
   const [tasks, setTasks] = useState(() => {
     const savedTasks = localStorage.getItem('tasks');
     return savedTasks ? JSON.parse(savedTasks) : [];
-  }); // State to store tasks
-  const [newTask, setNewTask] = useState(''); // State for new task input
-  const [editingIndex, setEditingIndex] = useState(null); // State for editing task
-  const [searchQuery, setSearchQuery] = useState(''); // State for search query
-  const [showModal, setShowModal] = useState(false); // State for modal visibility
-  const [taskToDelete, setTaskToDelete] = useState(null); // State to store the task to be deleted
-  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false); // State for delete all confirmation
-  const inputRef = useRef(null); // Create a reference for the input element
+  });
+  const [newTask, setNewTask] = useState('');
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [modalTask, setModalTask] = useState(null);
+  const [taskDate, setTaskDate] = useState('');
+  const [taskTime, setTaskTime] = useState('');
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showTaskDeleteConfirmation, setShowTaskDeleteConfirmation] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
-  // Preload and create audio object
-  const [audio] = useState(() => {
-    const audio = new Audio(clickSound);
-    audio.preload = 'auto';
-    audio.volume = 0.5; // Optional: Adjust volume if needed
-    return audio;
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newTaskDetails, setNewTaskDetails] = useState({
+    name: '',
+    dueDate: '',
+    dueTime: '',
   });
 
-  useEffect(() => {
-    // Ensure audio is ready by playing it briefly on mount
-    audio.play().catch(() => {}); // Handle any errors silently
-    audio.pause(); // Stop playback immediately after starting
-    audio.currentTime = 0; // Reset playback position
-  }, [audio]);
+  const [allDone, setAllDone] = useState(false);
 
-  useEffect(() => {
-    // Focus the input field when editingIndex changes
-    if (editingIndex !== null) {
-      inputRef.current.focus();
-    }
-  }, [editingIndex]);
-
-  useEffect(() => {
-    // Save tasks to local storage whenever they change
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
+  const audioRef = useRef(null);
+  const inputRef = useRef(null);
 
   const playClickSound = () => {
-    audio.play().catch(() => {}); // Handle any errors silently
+    if (audioRef.current) {
+      audioRef.current.play();
+    }
   };
 
   const handleAddTask = () => {
-    if (newTask.trim() === '') return; // Prevent adding empty tasks
+    if (newTask.trim() === '') return;
     playClickSound();
-    const newTaskObj = { text: newTask, done: false, date: new Date().toLocaleDateString() };
-    if (editingIndex !== null) {
-      const updatedTasks = tasks.map((task, index) =>
-        index === editingIndex ? newTaskObj : task
-      );
-      setTasks(updatedTasks);
-      setEditingIndex(null);
-    } else {
-      setTasks([...tasks, newTaskObj]);
-    }
+    const dateCreated = new Date().toISOString();
+    const newTasks = [...tasks, {
+      text: newTask,
+      done: false,
+      dateCreated,
+      dueDate: taskDate,
+      dueTime: taskTime
+    }];
+    setTasks(newTasks);
+    localStorage.setItem('tasks', JSON.stringify(newTasks));
     setNewTask('');
+    setTaskDate('');
+    setTaskTime('');
   };
 
   const handleEditTask = (index) => {
     playClickSound();
-    setNewTask(tasks[index].text);
+    const task = tasks[index];
     setEditingIndex(index);
+    setNewTaskDetails({
+      name: task.text,
+      dueDate: task.dueDate || '',
+      dueTime: task.dueTime || '',
+    });
+    setShowNewTaskModal(true);
   };
 
-  const handleRemoveTask = (index) => {
+  const handleUpdateTask = () => {
+    playClickSound();
+    if (editingIndex === null) return;
+
+    const updatedTasks = tasks.map((task, index) =>
+      index === editingIndex
+        ? { ...task, text: newTaskDetails.name, dueDate: newTaskDetails.dueDate, dueTime: newTaskDetails.dueTime }
+        : task
+    );
+    setTasks(updatedTasks);
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    setEditingIndex(null);
+    setNewTaskDetails({ name: '', dueDate: '', dueTime: '' });
+    handleCloseNewTaskModal();
+  };
+
+  const handleToggleTask = (index) => {
+    playClickSound();
+    const updatedTasks = tasks.map((task, i) => i === index ? { ...task, done: !task.done } : task);
+    setTasks(updatedTasks);
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+  };
+
+  const handleDeleteTask = (index) => {
     playClickSound();
     setTaskToDelete(index);
-    setShowModal(true);
+    setShowTaskDeleteConfirmation(true);
   };
 
-  const confirmRemoveTask = () => {
+  const confirmDeleteTask = () => {
     playClickSound();
     const updatedTasks = tasks.filter((_, i) => i !== taskToDelete);
     setTasks(updatedTasks);
-    setShowModal(false);
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    setShowTaskDeleteConfirmation(false);
     setTaskToDelete(null);
   };
 
-  const handleToggleDone = (index) => {
-    playClickSound(); // Ensure this is called to play the click sound
-    const updatedTasks = tasks.map((task, i) =>
-      i === index ? { ...task, done: !task.done } : task
-    );
-    setTasks(updatedTasks);
+  const cancelDeleteTask = () => {
+    playClickSound();
+    setShowTaskDeleteConfirmation(false);
+    setTaskToDelete(null);
   };
 
-  const handleDeleteAll = () => {
+  const handleDeleteAllTasks = () => {
     playClickSound();
-    setShowDeleteAllModal(true);
+    setShowConfirmationModal(true);
   };
 
   const confirmDeleteAll = () => {
     playClickSound();
     setTasks([]);
-    setShowDeleteAllModal(false);
+    localStorage.removeItem('tasks');
+    setShowConfirmationModal(false);
   };
 
-  const handleMarkAllDone = () => {
+  const handleShowModal = (task) => {
     playClickSound();
-    const updatedTasks = tasks.map((task) => ({ ...task, done: true }));
-    setTasks(updatedTasks);
+    setModalTask(task);
+    setShowModal(true);
   };
 
-  const filteredTasks = tasks.filter(task =>
-    task.text.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleCloseModal = () => {
+    playClickSound();
+    setShowModal(false);
+    setModalTask(null);
+  };
+
+  const handleDoneAll = () => {
+    playClickSound();
+    const updatedTasks = tasks.map(task => ({ ...task, done: true }));
+    setTasks(updatedTasks);
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    setAllDone(true);
+  };
+
+  const handleUndoneAll = () => {
+    playClickSound();
+    const updatedTasks = tasks.map(task => ({ ...task, done: false }));
+    setTasks(updatedTasks);
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    setAllDone(false);
+  };
+
+  const handleOpenNewTaskModal = () => {
+    setShowNewTaskModal(true);
+  };
+
+  const handleCloseNewTaskModal = () => {
+    setShowNewTaskModal(false);
+    setNewTaskDetails({ name: '', dueDate: '', dueTime: '' });
+    setEditingIndex(null); // Reset the editing index when closing the modal
+  };
+
+  const handleNewTaskInputChange = (e) => {
+    setNewTaskDetails({ ...newTaskDetails, [e.target.name]: e.target.value });
+  };
+
+  const handleAddTaskFromModal = () => {
+    if (newTaskDetails.name.trim() === '') return;
+    playClickSound();
+    const dateCreated = new Date().toISOString();
+    const newTasks = [...tasks, {
+      text: newTaskDetails.name,
+      done: false,
+      dateCreated,
+      dueDate: newTaskDetails.dueDate,
+      dueTime: newTaskDetails.dueTime
+    }];
+    setTasks(newTasks);
+    localStorage.setItem('tasks', JSON.stringify(newTasks));
+    handleCloseNewTaskModal();
+  };
+
+  useEffect(() => {
+    if (editingIndex !== null && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editingIndex]);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatAMPM = (timeString) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12; // the hour '0' should be '12'
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    return `${formattedHours}:${formattedMinutes} ${ampm}`;
+  };
 
   return (
-    <div className="container">
-      <img src={lexmeetLogo} alt="Lexmeet Logo" className="logo-lexmeet" />
-      <header>
-        <img src={newLogo} alt="To-Do App Logo" className="logo" />
-        <h1>To-Do App</h1>
-      </header>
-      <div className="search-container">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search tasks..."
-        />
-      </div>
-      <main>
-        <div className="task-input">
+    <>
+      <audio ref={audioRef} src={clickSound} preload="auto" />
+      <div className="gradient-box"></div>
+      <div className="container">
+        <a href="https://lexmeet.com" target="_blank" rel="noopener noreferrer">
+          <img src={lexmeetLogo} alt="Lexmeet Logo" className="logo-lexmeet" />
+        </a>
+        <header>
+          <img src={newLogo} alt="To-Do App Logo" className="logo" />
+          <h1>To-Do App</h1>
+        </header>
+        <div className="search-container">
           <input
             type="text"
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            placeholder="Add a new task..."
-            ref={inputRef} // Attach the reference to the input element
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
           />
-          <button className="comic-button" onClick={handleAddTask}>
-            {editingIndex !== null ? 'Update Task' : 'Add Task'}
-          </button>
         </div>
-        <div>
-          <button className="comic-button" onClick={handleMarkAllDone}>
-            Done All
-          </button>
-          <button className="comic-button" onClick={handleDeleteAll}>
-            Delete All
-          </button>
+        <div className="task-input">
+          {editingIndex === null && (
+            <button className="comic-button" onClick={handleOpenNewTaskModal}>Add Task +</button>
+          )}
+          {allDone ? (
+            <button className="comic-button" onClick={handleUndoneAll}>Undone All</button>
+          ) : (
+            <button className="comic-button" onClick={handleDoneAll}>Done All</button>
+          )}
+          <button className="comic-button" onClick={handleDeleteAllTasks}>Delete All</button>
         </div>
         <ul className="task-list">
-          {filteredTasks.map((task, index) => (
+          {tasks.filter(task => task.text.toLowerCase().includes(searchQuery)).map((task, index) => (
             <li key={index} className={`task-item ${task.done ? 'done' : ''}`}>
               <div className="task-content">
                 <span>{task.text}</span>
-                <small className="date-created">Date created: {task.date}</small>
+                <div className="date-created">{formatDate(task.dateCreated)}</div>
               </div>
               <div className="task-buttons">
-                <button onClick={() => handleEditTask(index)}>Edit</button>
-                <button onClick={() => handleToggleDone(index)}>
+                <button onClick={() => handleToggleTask(index)}>
                   {task.done ? 'Undone' : 'Done'}
                 </button>
-                <button onClick={() => handleRemoveTask(index)}>Delete</button>
+                <button onClick={() => handleEditTask(index)}>Edit</button>
+                <button onClick={() => handleDeleteTask(index)}>Delete</button>
+                <button onClick={() => handleShowModal(task)}>Details</button>
               </div>
             </li>
           ))}
         </ul>
-        {showModal && (
-          <div className="modal-overlay" onClick={() => setShowModal(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <h2>Confirm Delete</h2>
-              <p>Are you sure you want to delete this task?</p>
-              <button className="comic-button" onClick={confirmRemoveTask}>
-                Confirm
+      </div>
+
+      {/* New Task Modal */}
+      {showNewTaskModal && (
+        <div className="modal-overlay" onClick={handleCloseNewTaskModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{editingIndex === null ? 'Add New Task' : 'Update Task'}</h2>
+            <input
+              type="text"
+              name="name"
+              value={newTaskDetails.name}
+              onChange={handleNewTaskInputChange}
+              placeholder="Task name"
+              ref={inputRef}
+            />
+            <input
+              type="date"
+              name="dueDate"
+              value={newTaskDetails.dueDate}
+              onChange={handleNewTaskInputChange}
+              placeholder="Due Date"
+            />
+            <input
+              type="time"
+              name="dueTime"
+              value={newTaskDetails.dueTime}
+              onChange={handleNewTaskInputChange}
+              placeholder="Due Time"
+            />
+            <div className="modal-buttons">
+              <button onClick={editingIndex === null ? handleAddTaskFromModal : handleUpdateTask}>
+                {editingIndex === null ? 'Add Task' : 'Update Task'}
               </button>
-              <button className="comic-button" onClick={() => setShowModal(false)}>
-                Cancel
-              </button>
+              <button onClick={handleCloseNewTaskModal}>Cancel</button>
             </div>
           </div>
-        )}
-        {showDeleteAllModal && (
-          <div className="modal-overlay" onClick={() => setShowDeleteAllModal(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <h2>Confirm Delete All</h2>
-              <p>Are you sure you want to delete all tasks?</p>
-              <button className="comic-button" onClick={confirmDeleteAll}>
-                Confirm
-              </button>
-              <button className="comic-button" onClick={() => setShowDeleteAllModal(false)}>
-                Cancel
-              </button>
+        </div>
+      )}
+
+      {/* Task Details Modal */}
+      {showModal && modalTask && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Task Details</h2>
+            <p><strong>Task:</strong> {modalTask.text}</p>
+            {modalTask.dueDate && <p><strong>Due Date:</strong> {formatDate(modalTask.dueDate)}</p>}
+            {modalTask.dueTime && <p><strong>Due Time:</strong> {formatAMPM(modalTask.dueTime)}</p>}
+            <p><strong>Date Created:</strong> {formatDate(modalTask.dateCreated)}</p>
+            <div className="modal-buttons">
+              <button onClick={handleCloseModal}>Close</button>
             </div>
           </div>
-        )}
-      </main>
-    </div>
+        </div>
+      )}
+
+      {/* Confirmation Modals */}
+      {showConfirmationModal && (
+        <div className="modal-overlay" onClick={() => setShowConfirmationModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Confirm Delete All Tasks</h2>
+            <p>Are you sure you want to delete all tasks?</p>
+            <div className="modal-buttons">
+              <button onClick={confirmDeleteAll}>Yes</button>
+              <button onClick={() => setShowConfirmationModal(false)}>No</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTaskDeleteConfirmation && (
+        <div className="modal-overlay" onClick={cancelDeleteTask}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Confirm Delete Task</h2>
+            <p>Are you sure you want to delete this task?</p>
+            <div className="modal-buttons">
+              <button onClick={confirmDeleteTask}>Yes</button>
+              <button onClick={cancelDeleteTask}>No</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
