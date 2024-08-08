@@ -39,7 +39,12 @@ function App() {
   };
 
   const handleAddTask = () => {
-    if (newTask.trim() === '') return;
+    if (!newTask.trim() || !taskDate.trim() || !taskTime.trim()) {
+      // Optionally, display an error message
+      console.error('Please fill in all fields');
+      return;
+    }
+    
     playClickSound();
     const dateCreated = new Date().toISOString();
     const newTasks = [...tasks, {
@@ -55,6 +60,8 @@ function App() {
     setTaskDate('');
     setTaskTime('');
   };
+  
+  
 
   const handleEditTask = (index) => {
     playClickSound();
@@ -70,8 +77,8 @@ function App() {
 
   const handleUpdateTask = () => {
     playClickSound();
-    if (editingIndex === null) return;
-
+    if (editingIndex === null || newTaskDetails.name.trim() === '' || newTaskDetails.dueDate.trim() === '' || newTaskDetails.dueTime.trim() === '') return;
+  
     const updatedTasks = tasks.map((task, index) =>
       index === editingIndex
         ? { ...task, text: newTaskDetails.name, dueDate: newTaskDetails.dueDate, dueTime: newTaskDetails.dueTime }
@@ -83,6 +90,7 @@ function App() {
     setNewTaskDetails({ name: '', dueDate: '', dueTime: '' });
     handleCloseNewTaskModal();
   };
+  
 
   const handleToggleTask = (index) => {
     playClickSound();
@@ -167,21 +175,27 @@ function App() {
   };
 
   const handleAddTaskFromModal = () => {
-    if (newTaskDetails.name.trim() === '') return;
+    const { name, dueDate, dueTime } = newTaskDetails;
+    if (!name.trim() || !dueDate.trim() || !dueTime.trim()) {
+      // Optionally, display an error message
+      console.error('Please fill in all fields');
+      return;
+    }
+  
     playClickSound();
     const dateCreated = new Date().toISOString();
     const newTasks = [...tasks, {
-      text: newTaskDetails.name,
+      text: name,
       done: false,
       dateCreated,
-      dueDate: newTaskDetails.dueDate,
-      dueTime: newTaskDetails.dueTime
+      dueDate,
+      dueTime
     }];
     setTasks(newTasks);
     localStorage.setItem('tasks', JSON.stringify(newTasks));
     handleCloseNewTaskModal();
   };
-
+  
   useEffect(() => {
     if (editingIndex !== null && inputRef.current) {
       inputRef.current.focus();
